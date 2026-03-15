@@ -1,26 +1,105 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* ── Stone Scale ── */
+  --sv-stone-950: #0e0e0d;
+  --sv-stone-900: #161614;
+  --sv-stone-800: #1e1d1b;
+  --sv-stone-700: #2a2926;
+  --sv-stone-600: #3d3b37;
+  --sv-stone-500: #5c5850;
+  --sv-stone-400: #7a756b;
+  --sv-stone-300: #a09a8e;
+  --sv-stone-200: #c4bfb4;
+  --sv-stone-100: #e8e4db;
+  --sv-stone-50:  #f5f3ee;
+
+  /* ── Semantic ── */
+  --sv-bg-base:      var(--sv-stone-950);
+  --sv-bg-surface:   var(--sv-stone-900);
+  --sv-bg-elevated:  var(--sv-stone-800);
+
+  --sv-text-primary: var(--sv-stone-200);
+  --sv-text-muted:   var(--sv-stone-500);
+  --sv-text-faint:   var(--sv-stone-600);
+
+  --sv-border:       var(--sv-stone-800);
+  --sv-border-subtle:var(--sv-stone-900);
+
+  /* ── Accent: warm amber, heavily muted ── */
+  --sv-accent:       #8a7245;
+  --sv-accent-muted: #6b5a3a;
+  --sv-accent-glow:  rgba(138, 114, 69, 0.12);
+
+  /* ── Interactive ── */
+  --sv-active:       var(--sv-accent);
+  --sv-hover:        var(--sv-stone-800);
+  --sv-focus-ring:   var(--sv-accent-muted);
+
+  /* ── Video overlay ── */
+  --sv-scrim:        rgba(14, 14, 13, 0.6);
+  --sv-scrim-heavy:  rgba(14, 14, 13, 0.85);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-stone-950: var(--sv-stone-950);
+  --color-stone-900: var(--sv-stone-900);
+  --color-stone-800: var(--sv-stone-800);
+  --color-stone-700: var(--sv-stone-700);
+  --color-stone-600: var(--sv-stone-600);
+  --color-stone-500: var(--sv-stone-500);
+  --color-stone-400: var(--sv-stone-400);
+  --color-stone-300: var(--sv-stone-300);
+  --color-stone-200: var(--sv-stone-200);
+  --color-stone-100: var(--sv-stone-100);
+  --color-stone-50: var(--sv-stone-50);
+  --color-accent: var(--sv-accent);
+  --color-accent-muted: var(--sv-accent-muted);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--sv-stone-700) transparent;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--sv-bg-base);
+  color: var(--sv-text-primary);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  overflow: hidden;
+}
+
+::selection {
+  background: var(--sv-accent-muted);
+  color: var(--sv-stone-100);
+}
+
+/* Fade-in for stream transitions */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 1.2s ease-out forwards;
+}
+
+.animate-breathe {
+  animation: breathe 4s ease-in-out infinite;
+}
+
+/* Hide scrollbar for filmstrip */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
