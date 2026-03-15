@@ -141,7 +141,7 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-[#0f0e0d] text-[#e8e4dc]">
       {/* Header */}
-      <div className="border-b border-white/[0.04] px-8 py-6 flex items-center justify-between">
+      <div className="border-b border-white/[0.04] px-4 sm:px-8 py-4 sm:py-6 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold tracking-wide">Stillview Dashboard</h1>
           <p className="text-[#5c5850] text-xs mt-1">Analytics & stream performance</p>
@@ -159,7 +159,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-8 py-8 space-y-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
         {/* Key metrics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard

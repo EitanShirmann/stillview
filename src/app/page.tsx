@@ -81,6 +81,8 @@ export default function Home() {
   const [transitioning, setTransitioning] = useState(false);
   const [globeView, setGlobeView] = useState(false);
   const [stripHovered, setStripHovered] = useState(false);
+  const [muted, setMuted] = useState(true);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const stripRef = useRef<HTMLDivElement>(null);
 
   // Easter egg states
@@ -140,6 +142,18 @@ export default function Home() {
 
   const prev = useCallback(() => goTo(currentIndex - 1), [goTo, currentIndex]);
   const next = useCallback(() => goTo(currentIndex + 1), [goTo, currentIndex]);
+
+  const toggleMute = useCallback(() => {
+    const iframe = iframeRef.current;
+    if (iframe?.contentWindow) {
+      const cmd = muted ? "unMute" : "mute";
+      iframe.contentWindow.postMessage(
+        JSON.stringify({ event: "command", func: cmd, args: [] }),
+        "*"
+      );
+      setMuted(!muted);
+    }
+  }, [muted]);
 
   useEffect(() => {
     setCurrentIndex(0);
@@ -235,8 +249,9 @@ export default function Home() {
           />
         ) : (
           <iframe
+            ref={iframeRef}
             key={activeStream.videoId}
-            src={`https://www.youtube.com/embed/${activeStream.videoId}?autoplay=1&mute=0&controls=0&modestbranding=1&rel=0&showinfo=0&loop=1&playsinline=1&enablejsapi=1&iv_load_policy=3&disablekb=1&fs=0`}
+            src={`https://www.youtube.com/embed/${activeStream.videoId}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&showinfo=0&loop=1&playsinline=1&enablejsapi=1&iv_load_policy=3&disablekb=1&fs=0`}
             allow="autoplay; encrypted-media; autoplay *"
             tabIndex={-1}
             style={{
@@ -252,9 +267,6 @@ export default function Home() {
         <div className="absolute inset-0 z-[1]" />
       </div>
 
-      {/* ── Vignette overlays ── */}
-      <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[var(--sv-stone-950)] via-transparent to-transparent opacity-70" />
-      <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[var(--sv-stone-950)]/80 via-transparent to-transparent h-[30%]" />
 
       {/* ── Globe Overlay (centered, large) ── */}
       <div
@@ -272,7 +284,7 @@ export default function Home() {
 
         {/* Globe container */}
         <div className="relative z-10 flex flex-col items-center gap-4">
-          <div className="w-[min(75vh,75vw)] max-w-[650px]">
+          <div className="w-[min(85vh,85vw)] sm:w-[min(75vh,75vw)] max-w-[650px]">
             <Globe
               streams={filteredStreams}
               activeStream={activeStream}
@@ -293,12 +305,12 @@ export default function Home() {
       {/* ── Stream UI ── */}
       <div className="absolute inset-0 flex flex-col z-10">
         {/* Top bar — frosted glass card */}
-        <div className="flex justify-center px-6 pt-6">
+        <div className="flex justify-center px-3 pt-4 sm:px-6 sm:pt-6">
           <div
-            className="inline-flex flex-col items-center bg-[var(--sv-stone-950)]/40 backdrop-blur-xl border border-white/[0.06] rounded-2xl px-6 py-4 shadow-[0_4px_30px_rgba(0,0,0,0.3)] cursor-pointer select-none relative overflow-hidden"
+            className="inline-flex flex-col items-center bg-[var(--sv-stone-950)]/40 backdrop-blur-xl border border-white/[0.06] rounded-2xl px-3 py-3 sm:px-6 sm:py-4 shadow-[0_4px_30px_rgba(0,0,0,0.3)] cursor-pointer select-none relative overflow-hidden"
             onClick={handleStillviewClick}
           >
-            <div className="flex items-center gap-4 mb-3">
+            <div className="flex items-center gap-3 sm:gap-4 mb-2 sm:mb-3">
               <h1 className="text-[var(--sv-stone-100)] text-sm font-semibold tracking-[0.4em] uppercase">
                 Stillview
               </h1>
@@ -333,7 +345,7 @@ export default function Home() {
             </div>
 
             {/* Category pills */}
-            <div className="flex items-center justify-center gap-1.5 flex-wrap">
+            <div className="flex items-center justify-center gap-1 sm:gap-1.5 flex-wrap">
               <CategoryPill
                 label="All"
                 active={activeCategory === "all"}
@@ -366,17 +378,17 @@ export default function Home() {
         <div className="flex-1" />
 
         {/* Bottom section */}
-        <div className="px-8 pb-8 flex items-end">
+        <div className="px-4 sm:px-8 pb-8 flex items-end justify-between">
           {/* Location info — glassmorphism card, left-aligned */}
           <div
-            className="animate-fade-in bg-[var(--sv-stone-950)]/40 backdrop-blur-xl border border-white/[0.06] rounded-2xl px-6 py-4 shadow-[0_4px_30px_rgba(0,0,0,0.3)] max-w-sm cursor-pointer select-none relative overflow-hidden"
+            className="animate-fade-in bg-[var(--sv-stone-950)]/40 backdrop-blur-xl border border-white/[0.06] rounded-2xl px-4 py-3 sm:px-6 sm:py-4 shadow-[0_4px_30px_rgba(0,0,0,0.3)] max-w-[280px] sm:max-w-sm cursor-pointer select-none relative overflow-hidden"
             key={activeStream.id}
             onClick={handleLocationCardClick}
           >
-            <p className="text-[var(--sv-stone-50)] text-lg font-semibold tracking-wide">
+            <p className="text-[var(--sv-stone-50)] text-base sm:text-lg font-semibold tracking-wide">
               {activeStream.location}
             </p>
-            <p className="text-[var(--sv-stone-400)] text-sm italic mt-1 font-medium">
+            <p className="text-[var(--sv-stone-400)] text-xs sm:text-sm italic mt-1 font-medium">
               {activeStream.description}
             </p>
             <div className="flex items-center gap-3 mt-2">
@@ -397,6 +409,27 @@ export default function Home() {
               </span>
             </div>
           </div>
+
+          {/* Mute/Unmute button */}
+          <button
+            onClick={toggleMute}
+            className="p-3 rounded-full bg-[var(--sv-stone-950)]/40 backdrop-blur-xl border border-white/[0.06] text-[var(--sv-stone-300)] hover:text-white transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.3)] self-end"
+            title={muted ? "Unmute" : "Mute"}
+          >
+            {muted ? (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 5L6 9H2v6h4l5 4V5z" />
+                <line x1="23" y1="9" x2="17" y2="15" />
+                <line x1="17" y1="9" x2="23" y2="15" />
+              </svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 5L6 9H2v6h4l5 4V5z" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+              </svg>
+            )}
+          </button>
         </div>
       </div>
 
@@ -413,6 +446,12 @@ export default function Home() {
         style={{ top: "auto" }}
         onMouseEnter={() => setStripHovered(true)}
         onMouseLeave={() => setStripHovered(false)}
+        onClick={(e) => {
+          // Toggle on tap for mobile (clicking chevron area)
+          if (!(e.target as HTMLElement).closest("button")) {
+            setStripHovered((v) => !v);
+          }
+        }}
       >
         {/* Chevron trigger — thin hover zone at very bottom */}
         <div
@@ -461,7 +500,7 @@ export default function Home() {
           <div className="bg-[var(--sv-stone-950)]/70 backdrop-blur-xl border-t border-white/[0.04]">
             <div
               ref={stripRef}
-              className="flex gap-2 px-4 py-3 overflow-x-auto scrollbar-hide scroll-smooth"
+              className="flex gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 overflow-x-auto scrollbar-hide scroll-smooth"
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
               {filteredStreams.map((stream, idx) => {
@@ -478,7 +517,7 @@ export default function Home() {
                     style={{ width: 140, height: 80 }}
                   >
                     <img
-                      src={`https://img.youtube.com/vi/${stream.videoId}/mqdefault.jpg`}
+                      src={`https://img.youtube.com/vi/${stream.videoId}/hqdefault.jpg`}
                       alt={stream.location}
                       className="w-full h-full object-cover"
                       draggable={false}
