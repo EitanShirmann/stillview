@@ -80,7 +80,7 @@ export default function Home() {
   const [activeCategory, setActiveCategory] = useState<Category | "all">("all");
   const [transitioning, setTransitioning] = useState(false);
   const [globeView, setGlobeView] = useState(false);
-  const [stripHovered, setStripHovered] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [muted, setMuted] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const stripRef = useRef<HTMLDivElement>(null);
@@ -452,104 +452,95 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── Scrim when filmstrip is open ── */}
+      {/* ── Scrim when drawer is open ── */}
       <div
-        className={`absolute inset-0 bg-[var(--sv-stone-950)]/60 transition-opacity duration-500 pointer-events-none z-15 ${
-          stripHovered ? "opacity-100" : "opacity-0"
+        className={`absolute inset-0 bg-[var(--sv-stone-950)]/60 backdrop-blur-[2px] transition-all duration-500 z-15 ${
+          drawerOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
+        onClick={() => setDrawerOpen(false)}
       />
 
-      {/* ── Bottom filmstrip (hidden by default) ── */}
+      {/* ── Browse Streams Drawer ── */}
       <div
-        className="absolute bottom-0 left-0 right-0 z-20"
+        className="absolute left-0 right-0 bottom-0 z-20 overflow-hidden"
         style={{ top: "auto" }}
-        onMouseEnter={() => setStripHovered(true)}
-        onMouseLeave={() => setStripHovered(false)}
-        onClick={(e) => {
-          // Toggle on tap for mobile (clicking chevron area)
-          if (!(e.target as HTMLElement).closest("button")) {
-            setStripHovered((v) => !v);
-          }
-        }}
       >
-        {/* Chevron trigger — thin hover zone at very bottom */}
-        <div
-          className={`flex justify-center cursor-pointer transition-all duration-500 ${
-            stripHovered ? "pb-2 pt-3" : "pb-1 pt-1"
-          }`}
+        {/* Drawer handle / toggle bar — always visible */}
+        <button
+          onClick={() => setDrawerOpen((v) => !v)}
+          className="w-full flex items-center justify-center gap-2 py-2.5 bg-[var(--sv-stone-950)]/60 backdrop-blur-xl border-t border-white/[0.06] cursor-pointer group/handle hover:bg-[var(--sv-stone-950)]/80 transition-all duration-300"
         >
-          <div className="flex items-center gap-2">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 20 20"
-              fill="none"
-              className={`transition-all duration-500 ${
-                stripHovered
-                  ? "rotate-180 text-[var(--sv-stone-300)]"
-                  : "text-[var(--sv-stone-600)]"
-              }`}
-            >
-              <path
-                d="M5 8L10 13L15 8"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <span
-              className={`text-[8px] tracking-[0.15em] uppercase font-medium transition-all duration-500 ${
-                stripHovered ? "text-[var(--sv-stone-400)] opacity-100" : "text-[var(--sv-stone-700)] opacity-0"
-              }`}
-            >
-              Browse streams
-            </span>
-          </div>
-        </div>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 20 20"
+            fill="none"
+            className={`transition-transform duration-500 text-[var(--sv-stone-400)] group-hover/handle:text-white ${
+              drawerOpen ? "rotate-180" : ""
+            }`}
+          >
+            <path
+              d="M5 12L10 7L15 12"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <span className="text-[10px] tracking-[0.15em] uppercase font-semibold text-[var(--sv-stone-400)] group-hover/handle:text-white transition-colors duration-300">
+            {drawerOpen ? "Close" : "Browse streams"}
+          </span>
+          <span className="text-[10px] text-[var(--sv-stone-600)] font-mono">
+            {filteredStreams.length}
+          </span>
+        </button>
 
-        {/* Filmstrip — slides up on hover */}
+        {/* Drawer content — height-animated grid */}
         <div
-          className={`transition-all duration-500 ease-out ${
-            stripHovered
-              ? "opacity-100 translate-y-0"
-              : "opacity-0 translate-y-full pointer-events-none"
-          }`}
+          className="transition-[max-height,opacity] duration-500 ease-out overflow-hidden"
+          style={{
+            maxHeight: drawerOpen ? "50vh" : "0px",
+            opacity: drawerOpen ? 1 : 0,
+          }}
         >
-          <div className="bg-[var(--sv-stone-950)]/70 backdrop-blur-xl border-t border-white/[0.04]">
+          <div className="bg-[var(--sv-stone-950)]/85 backdrop-blur-2xl overflow-y-auto scrollbar-hide" style={{ maxHeight: "50vh" }}>
             <div
               ref={stripRef}
-              className="flex gap-1.5 sm:gap-2 lg:gap-3 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 overflow-x-auto scrollbar-hide scroll-smooth"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-1 p-2 sm:p-3"
             >
               {filteredStreams.map((stream, idx) => {
                 const isActive = idx === currentIndex;
                 return (
                   <button
                     key={stream.id}
-                    onClick={() => goTo(idx)}
-                    className={`flex-shrink-0 overflow-hidden transition-all duration-300 relative group/thumb w-[120px] h-[68px] sm:w-[140px] sm:h-[80px] lg:w-[180px] lg:h-[100px] xl:w-[200px] xl:h-[112px] ${
+                    onClick={() => { goTo(idx); setDrawerOpen(false); }}
+                    className={`relative overflow-hidden aspect-video transition-all duration-300 group/thumb ${
                       isActive
-                        ? "ring-2 ring-amber-400/60 scale-105"
-                        : "opacity-60 hover:opacity-100 hover:scale-105"
+                        ? "ring-2 ring-amber-400/70 ring-offset-1 ring-offset-black/50"
+                        : "opacity-70 hover:opacity-100 hover:scale-[1.03]"
                     }`}
                   >
                     <img
-                      src={`https://img.youtube.com/vi/${stream.videoId}/hqdefault.jpg`}
+                      src={`https://img.youtube.com/vi/${stream.videoId}/mqdefault.jpg`}
                       alt={stream.location}
                       className="w-full h-full object-cover"
                       draggable={false}
                       loading="lazy"
                     />
-                    {/* Label overlay */}
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 py-1.5">
-                      <p className="text-[9px] text-white/90 font-medium truncate leading-tight">
+                    {/* Gradient overlay with label */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover/thumb:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute inset-x-0 bottom-0 px-2 py-1.5">
+                      <p className="text-[10px] sm:text-[11px] text-white/90 font-semibold truncate leading-tight drop-shadow-lg">
                         {stream.location}
+                      </p>
+                      <p className="text-[8px] sm:text-[9px] text-white/50 truncate leading-tight mt-0.5 opacity-0 group-hover/thumb:opacity-100 transition-opacity duration-300">
+                        {stream.description}
                       </p>
                     </div>
                     {isActive && (
-                      <div className="absolute top-1.5 right-1.5">
-                        <span className="block w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.6)]" />
+                      <div className="absolute top-1.5 left-1.5 flex items-center gap-1 bg-amber-500/90 rounded-full px-1.5 py-0.5">
+                        <span className="block w-1.5 h-1.5 rounded-full bg-white animate-breathe" />
+                        <span className="text-[7px] font-bold text-white uppercase tracking-wider">Now</span>
                       </div>
                     )}
                   </button>
