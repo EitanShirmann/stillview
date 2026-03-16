@@ -242,7 +242,7 @@ export default function Home() {
       setSofiaClicks(0);
       setShowSofia(true);
       clearTimeout(sofiaTimer.current);
-      sofiaTimer.current = setTimeout(() => setShowSofia(false), 2000);
+      sofiaTimer.current = setTimeout(() => setShowSofia(false), 2500);
     }
   }, [sofiaClicks]);
 
@@ -488,16 +488,33 @@ export default function Home() {
               </span>
             </div>
 
-            {/* Sofia Easter egg */}
-            <div
-              className={`transition-all duration-500 overflow-hidden ${
-                showSofia ? "max-h-8 opacity-100 mt-2" : "max-h-0 opacity-0 mt-0"
-              }`}
-            >
-              <span className="text-[11px] text-amber-400 font-medium tracking-wide">
-                love you, Sofia
-              </span>
-            </div>
+            {/* Sofia Easter egg — hearts, flowers & confetti */}
+            {showSofia && (
+              <div className="relative mt-2">
+                {/* Floating particles */}
+                <div className="absolute inset-x-0 bottom-0 pointer-events-none overflow-visible" style={{ height: 120 }}>
+                  {[..."💖🌸💗🌺💕🌷✨💝🌹💖🌸💗🌺💕🌷✨💝🌹💖"].map((emoji, i) => (
+                    <span
+                      key={i}
+                      className="absolute animate-[sofia-float_2s_ease-out_forwards]"
+                      style={{
+                        left: `${5 + (i * 4.5)}%`,
+                        bottom: 0,
+                        fontSize: `${10 + Math.random() * 10}px`,
+                        animationDelay: `${i * 0.08}s`,
+                        opacity: 0,
+                      }}
+                    >
+                      {emoji}
+                    </span>
+                  ))}
+                </div>
+                {/* Text */}
+                <span className="text-[12px] text-pink-400 font-semibold tracking-wide animate-[sofia-glow_2s_ease-in-out]">
+                  💖 love you, Sofia 💖
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Sound button — shows unmute prompt if muted, otherwise sound-on indicator */}

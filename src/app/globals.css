@@ -102,6 +102,29 @@ body {
   animation: breathe 4s ease-in-out infinite;
 }
 
+/* Sofia Easter egg — hearts & confetti float up */
+@keyframes sofia-float {
+  0% {
+    transform: translateY(0) scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(-10px) scale(1) rotate(10deg);
+  }
+  100% {
+    transform: translateY(-120px) scale(0.4) rotate(45deg);
+    opacity: 0;
+  }
+}
+
+@keyframes sofia-glow {
+  0% { opacity: 0; text-shadow: 0 0 0 transparent; }
+  20% { opacity: 1; text-shadow: 0 0 12px rgba(236, 72, 153, 0.6); }
+  80% { opacity: 1; text-shadow: 0 0 8px rgba(236, 72, 153, 0.4); }
+  100% { opacity: 0; text-shadow: 0 0 0 transparent; }
+}
+
 /* Hide scrollbar for filmstrip */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
