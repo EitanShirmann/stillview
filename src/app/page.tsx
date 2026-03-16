@@ -82,6 +82,7 @@ export default function Home() {
   const [globeView, setGlobeView] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [muted, setMuted] = useState(false);
+  const [showCopied, setShowCopied] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const stripRef = useRef<HTMLDivElement>(null);
 
@@ -101,17 +102,65 @@ export default function Home() {
     return spreadStreams(base);
   }, [activeCategory]);
 
-  // Set Big Bear as default on first load
+  // Set stream from URL param, or default to Big Bear
   useEffect(() => {
-    const idx = filteredStreams.findIndex((s) => s.id === BIG_BEAR_ID);
-    if (idx !== -1 && activeCategory === "all") {
-      setCurrentIndex(idx);
+    const params = new URLSearchParams(window.location.search);
+    const streamId = params.get("stream");
+    if (streamId) {
+      // Find in all streams first, set category if needed
+      const allIdx = streams.findIndex((s) => s.id === streamId);
+      if (allIdx !== -1) {
+        const stream = streams[allIdx];
+        // If it's in a different category, switch to "all"
+        const idx = filteredStreams.findIndex((s) => s.id === streamId);
+        if (idx !== -1) {
+          setCurrentIndex(idx);
+        } else {
+          setActiveCategory("all");
+          // Will re-run after category change
+        }
+      }
+    } else {
+      const idx = filteredStreams.findIndex((s) => s.id === BIG_BEAR_ID);
+      if (idx !== -1 && activeCategory === "all") {
+        setCurrentIndex(idx);
+      }
     }
     // Only on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const activeStream = filteredStreams[currentIndex] || filteredStreams[0];
+
+  // Update URL with current stream ID (without reload)
+  useEffect(() => {
+    if (activeStream) {
+      const url = new URL(window.location.href);
+      url.searchParams.set("stream", activeStream.id);
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [activeStream]);
+
+  // Share current stream
+  const shareStream = useCallback(async () => {
+    const url = `${window.location.origin}?stream=${activeStream.id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${activeStream.location} — Stillview`,
+          text: activeStream.description,
+          url,
+        });
+      } catch {
+        // User cancelled or share failed — fall back to clipboard
+        await navigator.clipboard.writeText(url);
+      }
+    } else {
+      await navigator.clipboard.writeText(url);
+    }
+    setShowCopied(true);
+    setTimeout(() => setShowCopied(false), 2000);
+  }, [activeStream]);
 
   // Analytics: page view on mount
   useEffect(() => {
@@ -517,16 +566,41 @@ export default function Home() {
             )}
           </div>
 
-          {/* Sound button — shows unmute prompt if muted, otherwise sound-on indicator */}
-          <button
-            onClick={toggleMute}
-            className={`p-3 rounded-full bg-[var(--sv-stone-950)]/40 backdrop-blur-xl border border-white/[0.06] transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.3)] self-end ${
-              muted
-                ? "text-white animate-pulse border-white/20"
-                : "text-[var(--sv-stone-500)] hover:text-[var(--sv-stone-300)]"
-            }`}
-            title={muted ? "Click to unmute" : "Sound on"}
-          >
+          {/* Bottom-right buttons */}
+          <div className="flex flex-col items-end gap-2 self-end">
+            {/* Share button */}
+            <div className="relative">
+              <button
+                onClick={shareStream}
+                className="p-3 rounded-full bg-[var(--sv-stone-950)]/40 backdrop-blur-xl border border-white/[0.06] text-[var(--sv-stone-500)] hover:text-white transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.3)]"
+                title="Share this stream"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                  <polyline points="16 6 12 2 8 6" />
+                  <line x1="12" y1="2" x2="12" y2="15" />
+                </svg>
+              </button>
+              {/* "Copied" tooltip */}
+              <div
+                className={`absolute right-full mr-2 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg bg-[var(--sv-stone-950)]/80 backdrop-blur-xl border border-white/10 text-white text-[11px] font-medium tracking-wide whitespace-nowrap transition-all duration-300 ${
+                  showCopied ? "opacity-100 translate-x-0" : "opacity-0 translate-x-2 pointer-events-none"
+                }`}
+              >
+                Link copied!
+              </div>
+            </div>
+
+            {/* Sound button */}
+            <button
+              onClick={toggleMute}
+              className={`p-3 rounded-full bg-[var(--sv-stone-950)]/40 backdrop-blur-xl border border-white/[0.06] transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.3)] ${
+                muted
+                  ? "text-white animate-pulse border-white/20"
+                  : "text-[var(--sv-stone-500)] hover:text-[var(--sv-stone-300)]"
+              }`}
+              title={muted ? "Click to unmute" : "Sound on"}
+            >
             {muted ? (
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M11 5L6 9H2v6h4l5 4V5z" />
@@ -541,6 +615,7 @@ export default function Home() {
               </svg>
             )}
           </button>
+          </div>
         </div>
       </div>
 
