@@ -81,7 +81,7 @@ export default function Home() {
   const [transitioning, setTransitioning] = useState(false);
   const [globeView, setGlobeView] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [muted, setMuted] = useState(true);
+  const [muted, setMuted] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const stripRef = useRef<HTMLDivElement>(null);
 
@@ -166,19 +166,45 @@ export default function Home() {
   const toggleMute = useCallback(() => {
     const iframe = iframeRef.current;
     if (iframe?.contentWindow) {
-      const cmd = muted ? "unMute" : "mute";
+      // Always unmute — never mute again
       iframe.contentWindow.postMessage(
-        JSON.stringify({ event: "command", func: cmd, args: [] }),
+        JSON.stringify({ event: "command", func: "unMute", args: [] }),
         "*"
       );
-      setMuted(!muted);
+      setMuted(false);
     }
-  }, [muted]);
+  }, []);
 
   useEffect(() => {
     setCurrentIndex(0);
     if (activeCategory) trackCategoryChange(activeCategory);
   }, [activeCategory]);
+
+  // Auto-unmute on first user interaction (browser requires gesture for sound)
+  useEffect(() => {
+    const unmute = () => {
+      const iframe = iframeRef.current;
+      if (iframe?.contentWindow) {
+        iframe.contentWindow.postMessage(
+          JSON.stringify({ event: "command", func: "unMute", args: [] }),
+          "*"
+        );
+        setMuted(false);
+      }
+      // Remove listeners after first interaction
+      window.removeEventListener("click", unmute);
+      window.removeEventListener("keydown", unmute);
+    };
+    // Also try unmuting after iframe loads (works if browser allows it)
+    const timer = setTimeout(unmute, 2000);
+    window.addEventListener("click", unmute);
+    window.addEventListener("keydown", unmute);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("click", unmute);
+      window.removeEventListener("keydown", unmute);
+    };
+  }, []);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -271,7 +297,7 @@ export default function Home() {
           <iframe
             ref={iframeRef}
             key={activeStream.videoId}
-            src={`https://www.youtube.com/embed/${activeStream.videoId}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&showinfo=0&loop=1&playsinline=1&enablejsapi=1&iv_load_policy=3&disablekb=1&fs=0`}
+            src={`https://www.youtube.com/embed/${activeStream.videoId}?autoplay=1&mute=0&controls=0&modestbranding=1&rel=0&showinfo=0&loop=1&playsinline=1&enablejsapi=1&iv_load_policy=3&disablekb=1&fs=0`}
             allow="autoplay; encrypted-media; autoplay *"
             tabIndex={-1}
             style={{
@@ -474,11 +500,15 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Mute/Unmute button */}
+          {/* Sound button — shows unmute prompt if muted, otherwise sound-on indicator */}
           <button
             onClick={toggleMute}
-            className="p-3 rounded-full bg-[var(--sv-stone-950)]/40 backdrop-blur-xl border border-white/[0.06] text-[var(--sv-stone-300)] hover:text-white transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.3)] self-end"
-            title={muted ? "Unmute" : "Mute"}
+            className={`p-3 rounded-full bg-[var(--sv-stone-950)]/40 backdrop-blur-xl border border-white/[0.06] transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.3)] self-end ${
+              muted
+                ? "text-white animate-pulse border-white/20"
+                : "text-[var(--sv-stone-500)] hover:text-[var(--sv-stone-300)]"
+            }`}
+            title={muted ? "Click to unmute" : "Sound on"}
           >
             {muted ? (
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
