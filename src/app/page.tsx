@@ -90,8 +90,8 @@ export default function Home() {
   const [showSofia, setShowSofia] = useState(false);
   const [momClicks, setMomClicks] = useState(0);
   const [showMom, setShowMom] = useState(false);
-  const sofiaTimer = useRef<ReturnType<typeof setTimeout>>();
-  const momTimer = useRef<ReturnType<typeof setTimeout>>();
+  const sofiaTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const momTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const filteredStreams = useMemo(() => {
     const base =
@@ -225,7 +225,7 @@ export default function Home() {
   const counter = `${currentIndex + 1} / ${filteredStreams.length}`;
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-[var(--sv-bg-base)] relative">
+    <div className="h-dvh w-screen overflow-hidden bg-[var(--sv-bg-base)] relative">
       {/* ── Fullscreen Video ── */}
       <div
         className={`absolute overflow-hidden transition-opacity duration-1000 ${
@@ -305,7 +305,7 @@ export default function Home() {
       {/* ── Stream UI ── */}
       <div className="absolute inset-0 flex flex-col z-10">
         {/* Top bar — frosted glass card */}
-        <div className="flex justify-center px-3 pt-4 sm:px-6 sm:pt-6">
+        <div className="flex justify-center px-3 pt-8 sm:pt-10 lg:pt-14">
           <div
             className="inline-flex flex-col items-center bg-[var(--sv-stone-950)]/40 backdrop-blur-xl border border-white/[0.06] rounded-2xl px-3 py-3 sm:px-6 sm:py-4 shadow-[0_4px_30px_rgba(0,0,0,0.3)] cursor-pointer select-none relative overflow-hidden"
             onClick={handleStillviewClick}
@@ -374,8 +374,27 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Spacer */}
-        <div className="flex-1" />
+        {/* Spacer with nav arrows */}
+        <div className="flex-1 flex items-center justify-between px-3 sm:px-6">
+          <button
+            onClick={prev}
+            className="p-2.5 sm:p-3 rounded-full bg-[var(--sv-stone-950)]/30 backdrop-blur-xl border border-white/[0.06] text-[var(--sv-stone-400)] hover:text-white hover:bg-[var(--sv-stone-950)]/50 transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.3)]"
+            title="Previous stream"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+          <button
+            onClick={next}
+            className="p-2.5 sm:p-3 rounded-full bg-[var(--sv-stone-950)]/30 backdrop-blur-xl border border-white/[0.06] text-[var(--sv-stone-400)] hover:text-white hover:bg-[var(--sv-stone-950)]/50 transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.3)]"
+            title="Next stream"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
+        </div>
 
         {/* Bottom section */}
         <div className="px-4 sm:px-8 pb-8 flex items-end justify-between">
@@ -500,7 +519,7 @@ export default function Home() {
           <div className="bg-[var(--sv-stone-950)]/70 backdrop-blur-xl border-t border-white/[0.04]">
             <div
               ref={stripRef}
-              className="flex gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 overflow-x-auto scrollbar-hide scroll-smooth"
+              className="flex gap-1.5 sm:gap-2 lg:gap-3 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 overflow-x-auto scrollbar-hide scroll-smooth"
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
               {filteredStreams.map((stream, idx) => {
@@ -509,12 +528,11 @@ export default function Home() {
                   <button
                     key={stream.id}
                     onClick={() => goTo(idx)}
-                    className={`flex-shrink-0 overflow-hidden transition-all duration-300 relative group/thumb ${
+                    className={`flex-shrink-0 overflow-hidden transition-all duration-300 relative group/thumb w-[120px] h-[68px] sm:w-[140px] sm:h-[80px] lg:w-[180px] lg:h-[100px] xl:w-[200px] xl:h-[112px] ${
                       isActive
                         ? "ring-2 ring-amber-400/60 scale-105"
                         : "opacity-60 hover:opacity-100 hover:scale-105"
                     }`}
-                    style={{ width: 140, height: 80 }}
                   >
                     <img
                       src={`https://img.youtube.com/vi/${stream.videoId}/hqdefault.jpg`}

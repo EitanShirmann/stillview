@@ -64,6 +64,13 @@
   scrollbar-color: var(--sv-stone-700) transparent;
 }
 
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+
 body {
   background: var(--sv-bg-base);
   color: var(--sv-text-primary);
