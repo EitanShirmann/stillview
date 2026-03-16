@@ -143,6 +143,26 @@ export default function Home() {
   const prev = useCallback(() => goTo(currentIndex - 1), [goTo, currentIndex]);
   const next = useCallback(() => goTo(currentIndex + 1), [goTo, currentIndex]);
 
+  const randomStream = useCallback(() => {
+    let rand = Math.floor(Math.random() * filteredStreams.length);
+    // Avoid landing on the same stream
+    if (filteredStreams.length > 1 && rand === currentIndex) {
+      rand = (rand + 1) % filteredStreams.length;
+    }
+    goTo(rand);
+    // Unmute after a short delay so the new iframe has loaded
+    setTimeout(() => {
+      const iframe = iframeRef.current;
+      if (iframe?.contentWindow) {
+        iframe.contentWindow.postMessage(
+          JSON.stringify({ event: "command", func: "unMute", args: [] }),
+          "*"
+        );
+        setMuted(false);
+      }
+    }, 1200);
+  }, [currentIndex, filteredStreams.length, goTo]);
+
   const toggleMute = useCallback(() => {
     const iframe = iframeRef.current;
     if (iframe?.contentWindow) {
@@ -304,8 +324,8 @@ export default function Home() {
 
       {/* ── Stream UI ── */}
       <div className="absolute inset-0 flex flex-col z-10">
-        {/* Top bar — frosted glass card */}
-        <div className="flex justify-center px-3 pt-8 sm:pt-10 lg:pt-14">
+        {/* Top bar — frosted glass card + dice */}
+        <div className="flex items-center justify-center gap-3 sm:gap-4 px-3 pt-8 sm:pt-10 lg:pt-14">
           <div
             className="inline-flex flex-col items-center bg-[var(--sv-stone-950)]/40 backdrop-blur-xl border border-white/[0.06] rounded-2xl px-3 py-3 sm:px-6 sm:py-4 shadow-[0_4px_30px_rgba(0,0,0,0.3)] cursor-pointer select-none relative overflow-hidden"
             onClick={handleStillviewClick}
@@ -372,6 +392,31 @@ export default function Home() {
               </span>
             </div>
           </div>
+
+          {/* Dice — random stream button, outside navbar */}
+          <button
+            onClick={randomStream}
+            className="self-stretch aspect-square flex items-center justify-center rounded-2xl bg-[var(--sv-stone-950)]/40 backdrop-blur-xl border border-white/[0.06] shadow-[0_4px_30px_rgba(0,0,0,0.3)] text-[var(--sv-stone-500)] hover:text-white hover:bg-[var(--sv-stone-950)]/60 transition-all duration-500 hover:rotate-180 hover:scale-110"
+            title="Random stream"
+          >
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="2" y="2" width="20" height="20" rx="3" />
+              <circle cx="8" cy="8" r="1.5" fill="currentColor" stroke="none" />
+              <circle cx="16" cy="8" r="1.5" fill="currentColor" stroke="none" />
+              <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+              <circle cx="8" cy="16" r="1.5" fill="currentColor" stroke="none" />
+              <circle cx="16" cy="16" r="1.5" fill="currentColor" stroke="none" />
+            </svg>
+          </button>
         </div>
 
         {/* Spacer with nav arrows */}
